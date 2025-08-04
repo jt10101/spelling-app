@@ -5,7 +5,9 @@ import "./App.css";
 function App() {
   const [gameMode, setGameMode] = useState("menu"); // 'menu', 'quiz', 'results', 'summary', 'wordlist', 'edit', 'select'
   const [wordList, setWordList] = useState(defaultWordList);
-  const [selectedWordListName, setSelectedWordListName] = useState("Week 1");
+  const [selectedWordListName, setSelectedWordListName] = useState(
+    "Spelling 14 - 6 August"
+  ); // For continuity, this needs to be fixed so that I pull the latest word list instead of having to manually update the word list name
   const [currentWord, setCurrentWord] = useState("");
   const [userInput, setUserInput] = useState("");
   const [editingWord, setEditingWord] = useState("");
