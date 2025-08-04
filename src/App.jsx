@@ -25,56 +25,78 @@ function App() {
   const [currentTranscript, setCurrentTranscript] = useState("");
 
   // Load available voices when component mounts
-  useEffect(() => {
-    const loadVoices = () => {
-      const voices = speechSynthesis.getVoices();
-      // Filter to only English and Chinese voices, excluding problematic voices
-      const filteredVoices = voices.filter(
+  const loadVoices = () => {
+    const voices = speechSynthesis.getVoices();
+    console.log("Available voices:", voices); // Debug log
+
+    // Filter to only English voices, with more inclusive filtering for mobile
+    const filteredVoices = voices.filter(
+      (voice) =>
+        voice.lang.startsWith("en") &&
+        // Include common mobile voices and exclude problematic ones
+        ![
+          "Cellos",
+          "Bubbles",
+          "Boing",
+          "Bad News",
+          "Bells",
+          "Bahh",
+          "Albert",
+          "Fred",
+          "Good News",
+        ].includes(voice.name) &&
+        // Include specific preferred voices or any English voice
+        (voice.name === "Arthur" ||
+          voice.name === "Catherine" ||
+          voice.name === "Gordon" ||
+          voice.name === "Daniel (English (United Kingdom))" ||
+          voice.name.includes("English") ||
+          voice.name.includes("en-"))
+    );
+
+    console.log("Filtered voices:", filteredVoices); // Debug log
+
+    // If no voices found with strict filtering, use all English voices
+    let finalVoices = filteredVoices;
+    if (filteredVoices.length === 0) {
+      finalVoices = voices.filter((voice) => voice.lang.startsWith("en"));
+      console.log("Fallback voices:", finalVoices); // Debug log
+    }
+
+    setAvailableVoices(finalVoices);
+
+    // Try to find Arthur (GB) first, then other British voices
+    const preferredVoice =
+      finalVoices.find((voice) => voice.name === "Arthur") ||
+      finalVoices.find(
         (voice) =>
-          (voice.lang.startsWith("en") || voice.lang.startsWith("zh")) && //   "Cellos", //   "Bubbles", //   "Boing", //   "Bad News", // ![
-          //   "Bells",
-          //   "Bahh",
-          //   "Albert",
-          //   "Eddy (English (United Kingdom))",
-          //   "Eddy (English (United States))",
-          //   "Eddy (Chinese (China mainland))",
-          //   "Eddy (Chinese (Taiwan))",
-          //   "Flo (English (United Kingdom))",
-          //   "Flo (English (United States))",
-          //   "Flo (Chinese (China mainland))",
-          //   "Flo (Chinese (Taiwan))",
-          //   "Fred",
-          //   "Good News",
-          // ].includes(voice.name)
-          [
-            "Arthur",
-            "Catherine",
-            "Gordon",
-            "Daniel (English (United Kingdom))",
-          ].includes(voice.name)
+          voice.lang === "en-GB" ||
+          voice.lang === "en-SG" ||
+          voice.lang === "en-AU"
       );
-      setAvailableVoices(filteredVoices);
 
-      // Try to find Arthur (GB) first, then other British voices
-      const preferredVoice =
-        filteredVoices.find((voice) => voice.name === "Arthur") ||
-        filteredVoices.find(
-          (voice) =>
-            voice.lang === "en-GB" ||
-            voice.lang === "en-SG" ||
-            voice.lang === "en-AU"
-        );
+    if (preferredVoice) {
+      setSelectedVoice(preferredVoice);
+    } else if (finalVoices.length > 0) {
+      setSelectedVoice(finalVoices[0]);
+    }
+  };
 
-      if (preferredVoice) {
-        setSelectedVoice(preferredVoice);
-      } else if (filteredVoices.length > 0) {
-        setSelectedVoice(filteredVoices[0]);
-      }
-    };
-
+  useEffect(() => {
     if ("speechSynthesis" in window) {
+      // Load voices immediately
       loadVoices();
+
+      // Set up the voices changed event
       speechSynthesis.onvoiceschanged = loadVoices;
+
+      // Mobile browsers sometimes need a delay to load voices
+      setTimeout(() => {
+        if (availableVoices.length === 0) {
+          console.log("Retrying voice loading...");
+          loadVoices();
+        }
+      }, 1000);
     }
 
     // Initialize Speech Recognition
@@ -389,15 +411,31 @@ function App() {
                 onChange={handleVoiceChange}
                 className="voice-select-menu"
               >
-                {availableVoices.map((voice, index) => (
-                  <option key={index} value={voice.name}>
-                    {getVoiceDisplayName(voice)}
-                  </option>
-                ))}
+                {availableVoices.length === 0 ? (
+                  <option value="">Loading voices...</option>
+                ) : (
+                  availableVoices.map((voice, index) => (
+                    <option key={index} value={voice.name}>
+                      {getVoiceDisplayName(voice)}
+                    </option>
+                  ))
+                )}
               </select>
               <small className="voice-preview-hint">
                 Select a voice to hear a preview
               </small>
+              {availableVoices.length === 0 && (
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    console.log("Manual voice reload");
+                    loadVoices();
+                  }}
+                  style={{ marginTop: "10px", fontSize: "0.8rem" }}
+                >
+                  Reload Voices
+                </button>
+              )}
             </div>
           </div>
 
@@ -535,18 +573,18 @@ function App() {
           <div className="add-word-section">
             <h3>Add New Word</h3>
             <div className="add-word-input">
-                              <input
-                  type="text"
-                  value={newWord}
-                  onChange={(e) => setNewWord(e.target.value)}
-                  onKeyPress={handleAddKeyPress}
-                  placeholder="Enter a new word..."
-                  className="spelling-input"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  spellCheck="false"
-                />
+              <input
+                type="text"
+                value={newWord}
+                onChange={(e) => setNewWord(e.target.value)}
+                onKeyPress={handleAddKeyPress}
+                placeholder="Enter a new word..."
+                className="spelling-input"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+              />
               <button className="btn btn-primary" onClick={addWord}>
                 Add Word
               </button>
