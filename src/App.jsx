@@ -202,7 +202,7 @@ function App() {
       speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(word);
       utterance.voice = selectedVoice;
-      utterance.rate = 0.8;
+      utterance.rate = 0.4; // Slower rate for clearer pronunciation
       utterance.pitch = 1.0;
       utterance.volume = 1.0;
       speechSynthesis.speak(utterance);
@@ -255,17 +255,14 @@ function App() {
 
   const previewVoice = (voice) => {
     if ("speechSynthesis" in window && voice) {
-      // Cancel any ongoing speech
       speechSynthesis.cancel();
-
       const utterance = new SpeechSynthesisUtterance(
         "Hello, this is a preview"
       );
       utterance.voice = voice;
-      utterance.rate = 0.8;
+      utterance.rate = 0.6; // Slower rate for clearer preview
       utterance.pitch = 1.0;
       utterance.volume = 1.0;
-
       speechSynthesis.speak(utterance);
     }
   };
