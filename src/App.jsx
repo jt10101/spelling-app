@@ -197,7 +197,7 @@ function App() {
   };
 
   const getCorrectAnswersCount = () => {
-    return userAnswers.filter((answer, index) => 
+    return userAnswers.filter((answer, index) =>
       checkAnswer(answer, quizWords[index])
     ).length;
   };
@@ -434,12 +434,18 @@ function App() {
                 const userAnswer = userAnswers[index] || "";
                 const isCorrect = checkAnswer(userAnswer, word);
                 return (
-                  <div key={index} className={`summary-item ${isCorrect ? 'correct' : 'incorrect'}`}>
+                  <div
+                    key={index}
+                    className={`summary-item ${
+                      isCorrect ? "correct" : "incorrect"
+                    }`}
+                  >
                     <div className="summary-word">
                       <strong>Word {index + 1}:</strong> {word}
                     </div>
                     <div className="summary-answer">
-                      <strong>Your answer:</strong> {userAnswer || "(no answer)"}
+                      <strong>Your answer:</strong>{" "}
+                      {userAnswer || "(no answer)"}
                     </div>
                     <div className="summary-result">
                       {isCorrect ? "✅ Correct" : "❌ Incorrect"}
