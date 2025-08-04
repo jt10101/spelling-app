@@ -29,39 +29,23 @@ function App() {
     const voices = speechSynthesis.getVoices();
     console.log("Available voices:", voices); // Debug log
 
-    // Filter to only English voices, with more inclusive filtering for mobile
+    // Filter to only specific preferred voices (same as web)
     const filteredVoices = voices.filter(
       (voice) =>
         voice.lang.startsWith("en") &&
-        // Include common mobile voices and exclude problematic ones
-        ![
-          "Cellos",
-          "Bubbles",
-          "Boing",
-          "Bad News",
-          "Bells",
-          "Bahh",
-          "Albert",
-          "Fred",
-          "Good News",
-        ].includes(voice.name) &&
-        // Include specific preferred voices or any English voice
-        (voice.name === "Arthur" ||
-          voice.name === "Catherine" ||
-          voice.name === "Gordon" ||
-          voice.name === "Daniel (English (United Kingdom))" ||
-          voice.name.includes("English") ||
-          voice.name.includes("en-"))
+        [
+          "Arthur",
+          "Catherine",
+          "Gordon",
+          "Daniel (English (United Kingdom))",
+        ].includes(voice.name)
     );
 
     console.log("Filtered voices:", filteredVoices); // Debug log
 
-    // If no voices found with strict filtering, use all English voices
-    let finalVoices = filteredVoices;
-    if (filteredVoices.length === 0) {
-      finalVoices = voices.filter((voice) => voice.lang.startsWith("en"));
-      console.log("Fallback voices:", finalVoices); // Debug log
-    }
+    // Use only the filtered voices (no fallback to all English voices)
+    const finalVoices = filteredVoices;
+    console.log("Final voices:", finalVoices); // Debug log
 
     setAvailableVoices(finalVoices);
 
@@ -412,7 +396,7 @@ function App() {
                 className="voice-select-menu"
               >
                 {availableVoices.length === 0 ? (
-                  <option value="">Loading voices...</option>
+                  <option value="">No preferred voices available</option>
                 ) : (
                   availableVoices.map((voice, index) => (
                     <option key={index} value={voice.name}>
@@ -433,7 +417,7 @@ function App() {
                   }}
                   style={{ marginTop: "10px", fontSize: "0.8rem" }}
                 >
-                  Reload Voices
+                  Retry Voice Loading
                 </button>
               )}
             </div>
