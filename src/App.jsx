@@ -4,11 +4,7 @@ import "./App.css";
 function App() {
   const [currentWord, setCurrentWord] = useState("");
   const [userInput, setUserInput] = useState("");
-  const [score, setScore] = useState(0);
-  const [totalAttempts, setTotalAttempts] = useState(0);
-  const [feedback, setFeedback] = useState("");
-  const [isCorrect, setIsCorrect] = useState(null);
-  const [gameMode, setGameMode] = useState("menu"); // 'menu', 'quiz', 'results', 'wordlist', 'edit'
+  const [gameMode, setGameMode] = useState("menu"); // 'menu', 'quiz', 'results', 'summary', 'wordlist', 'edit'
   const [wordList, setWordList] = useState([
     "beautiful",
     "difficult",
@@ -36,6 +32,9 @@ function App() {
   const [editingIndex, setEditingIndex] = useState(-1);
   const [availableVoices, setAvailableVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState(null);
+  const [quizWords, setQuizWords] = useState([]);
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [userAnswers, setUserAnswers] = useState([]);
 
   // Load available voices when component mounts
   useEffect(() => {
@@ -76,47 +75,61 @@ function App() {
     };
   }, []);
 
+  // Auto-play word when current word changes
+  useEffect(() => {
+    if (currentWord && gameMode === "quiz") {
+      // Small delay to ensure the word is set
+      const timer = setTimeout(() => {
+        speakWord();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [currentWord, gameMode]);
+
   const startQuiz = () => {
-    setGameMode("quiz");
-    setScore(0);
-    setTotalAttempts(0);
-    setFeedback("");
-    setIsCorrect(null);
+    // Create a randomized copy of the word list
+    const shuffledWords = [...wordList].sort(() => Math.random() - 0.5);
+    setQuizWords(shuffledWords);
+    setCurrentWordIndex(0);
     setUserInput("");
-    getNewWord();
+    setUserAnswers([]);
+    setGameMode("quiz");
+    setCurrentWord(shuffledWords[0]);
   };
 
   const getNewWord = () => {
-    const randomWord = wordList[Math.floor(Math.random() * wordList.length)];
-    setCurrentWord(randomWord);
-    setUserInput("");
-    setFeedback("");
-    setIsCorrect(null);
-  };
-
-  const checkSpelling = () => {
-    const isSpellingCorrect =
-      userInput.toLowerCase().trim() === currentWord.toLowerCase();
-    setIsCorrect(isSpellingCorrect);
-
-    if (isSpellingCorrect) {
-      setScore(score + 1);
-      setFeedback("Correct! Well done! 🎉");
-    } else {
-      setFeedback(`Incorrect. The correct spelling is: "${currentWord}"`);
+    // Save current answer before moving to next word
+    if (userInput.trim()) {
+      const newAnswers = [...userAnswers];
+      newAnswers[currentWordIndex] = userInput.trim();
+      setUserAnswers(newAnswers);
     }
 
-    setTotalAttempts(totalAttempts + 1);
+    const nextIndex = currentWordIndex + 1;
+    if (nextIndex < quizWords.length) {
+      setCurrentWordIndex(nextIndex);
+      setCurrentWord(quizWords[nextIndex]);
+      setUserInput("");
+    } else {
+      // Quiz completed - save final answer
+      const finalAnswers = [...userAnswers];
+      finalAnswers[currentWordIndex] = userInput.trim();
+      setUserAnswers(finalAnswers);
+      setGameMode("summary");
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    // Only allow letters (a-z, A-Z) and spaces
+    const lettersOnly = value.replace(/[^a-zA-Z\s]/g, "");
+    setUserInput(lettersOnly);
   };
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
-      checkSpelling();
+      getNewWord();
     }
-  };
-
-  const finishQuiz = () => {
-    setGameMode("results");
   };
 
   const backToMenu = () => {
@@ -177,6 +190,16 @@ function App() {
     }
 
     return displayName;
+  };
+
+  const checkAnswer = (userAnswer, correctWord) => {
+    return userAnswer.toLowerCase() === correctWord.toLowerCase();
+  };
+
+  const getCorrectAnswersCount = () => {
+    return userAnswers.filter((answer, index) => 
+      checkAnswer(answer, quizWords[index])
+    ).length;
   };
 
   // Word list editing functions
@@ -386,29 +409,47 @@ function App() {
     );
   }
 
-  if (gameMode === "results") {
-    const percentage =
-      totalAttempts > 0 ? Math.round((score / totalAttempts) * 100) : 0;
+  if (gameMode === "summary") {
+    const correctCount = getCorrectAnswersCount();
+    const percentage = Math.round((correctCount / quizWords.length) * 100);
+
     return (
       <div className="app">
         <div className="container">
-          <h1 className="title">🏆 Quiz Results</h1>
+          <h1 className="title">📊 Quiz Summary</h1>
           <div className="results">
             <div className="result-card">
-              <h2>Final Score</h2>
+              <h2>Final Results</h2>
               <div className="score">
-                {score}/{totalAttempts}
+                {correctCount}/{quizWords.length} correct
               </div>
               <div className="percentage">{percentage}%</div>
             </div>
-            <div className="feedback-message">
-              {percentage >= 80 && "Excellent! You're a spelling champion! 🏆"}
-              {percentage >= 60 &&
-                percentage < 80 &&
-                "Good job! Keep practicing! 👍"}
-              {percentage < 60 && "Keep practicing! You'll improve! 💪"}
+          </div>
+
+          <div className="summary-section">
+            <h3>Your Answers</h3>
+            <div className="summary-grid">
+              {quizWords.map((word, index) => {
+                const userAnswer = userAnswers[index] || "";
+                const isCorrect = checkAnswer(userAnswer, word);
+                return (
+                  <div key={index} className={`summary-item ${isCorrect ? 'correct' : 'incorrect'}`}>
+                    <div className="summary-word">
+                      <strong>Word {index + 1}:</strong> {word}
+                    </div>
+                    <div className="summary-answer">
+                      <strong>Your answer:</strong> {userAnswer || "(no answer)"}
+                    </div>
+                    <div className="summary-result">
+                      {isCorrect ? "✅ Correct" : "❌ Incorrect"}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
+
           <div className="menu-buttons">
             <button className="btn btn-primary" onClick={startQuiz}>
               Try Again
@@ -428,9 +469,13 @@ function App() {
         <div className="header">
           <h1 className="title">📝 Spelling Quiz</h1>
           <div className="stats">
-            <span>Score: {score}</span>
-            <span>Attempts: {totalAttempts}</span>
+            <span>
+              Word: {currentWordIndex + 1}/{quizWords.length}
+            </span>
           </div>
+          <button className="btn-back-menu" onClick={backToMenu}>
+            ← Menu
+          </button>
         </div>
 
         <div className="quiz-area">
@@ -438,7 +483,7 @@ function App() {
             <h2>Listen to the word:</h2>
             <div className="voice-controls">
               <button className="btn btn-audio" onClick={speakWord}>
-                🔊 Play Word
+                🔊 Play Word Again
               </button>
             </div>
           </div>
@@ -449,35 +494,17 @@ function App() {
               id="spelling-input"
               type="text"
               value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
+              onChange={handleInputChange}
               onKeyPress={handleKeyPress}
               placeholder="Enter the spelling..."
-              className={`spelling-input ${
-                isCorrect === true
-                  ? "correct"
-                  : isCorrect === false
-                  ? "incorrect"
-                  : ""
-              }`}
+              className="spelling-input"
               autoFocus
             />
           </div>
 
-          {feedback && (
-            <div className={`feedback ${isCorrect ? "correct" : "incorrect"}`}>
-              {feedback}
-            </div>
-          )}
-
           <div className="quiz-buttons">
-            <button className="btn btn-primary" onClick={checkSpelling}>
-              Check Spelling
-            </button>
-            <button className="btn btn-secondary" onClick={getNewWord}>
+            <button className="btn btn-primary" onClick={getNewWord}>
               Next Word
-            </button>
-            <button className="btn btn-secondary" onClick={finishQuiz}>
-              Finish Quiz
             </button>
           </div>
         </div>
