@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { defaultWordList } from "./wordList";
+import { defaultWordList, wordLists } from "./wordList";
 import "./App.css";
 
 function App() {
-  const [gameMode, setGameMode] = useState("menu"); // 'menu', 'quiz', 'results', 'summary', 'wordlist', 'edit'
+  const [gameMode, setGameMode] = useState("menu"); // 'menu', 'quiz', 'results', 'summary', 'wordlist', 'edit', 'select'
   const [wordList, setWordList] = useState(defaultWordList);
+  const [selectedWordListName, setSelectedWordListName] = useState("Week 1");
   const [currentWord, setCurrentWord] = useState("");
   const [userInput, setUserInput] = useState("");
   const [editingWord, setEditingWord] = useState("");
@@ -194,7 +195,7 @@ function App() {
       speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(transcript);
       utterance.voice = selectedVoice;
-      utterance.rate = 0.8;
+      utterance.rate = 0.6; // Slower playback for clearer understanding
       utterance.pitch = 1.0;
       utterance.volume = 1.0;
       speechSynthesis.speak(utterance);
@@ -215,6 +216,12 @@ function App() {
   };
 
   const backToMenu = () => {
+    setGameMode("menu");
+  };
+
+  const selectWordList = (listName) => {
+    setSelectedWordListName(listName);
+    setWordList(wordLists[listName]);
     setGameMode("menu");
   };
 
@@ -344,9 +351,22 @@ function App() {
             </div>
           </div>
 
+          <div className="word-list-info">
+            <h3>📚 Current Word List</h3>
+            <p className="selected-list-name">
+              {selectedWordListName} ({wordList.length} words)
+            </p>
+          </div>
+
           <div className="menu-buttons">
             <button className="btn btn-primary" onClick={startQuiz}>
               Start Quiz
+            </button>
+            <button
+              className="btn btn-secondary"
+              onClick={() => setGameMode("select")}
+            >
+              Select Word List
             </button>
             <button
               className="btn btn-secondary"
@@ -366,21 +386,88 @@ function App() {
     );
   }
 
+  if (gameMode === "select") {
+    return (
+      <div className="app">
+        <div className="container">
+          <h1 className="title">📚 Select Word List</h1>
+          <p className="subtitle">
+            Choose which words you want to practice with
+          </p>
+
+          <div className="word-list-selection">
+            {Object.keys(wordLists).map((listName) => (
+              <div
+                key={listName}
+                className={`word-list-option ${
+                  selectedWordListName === listName ? "selected" : ""
+                }`}
+                onClick={() => selectWordList(listName)}
+              >
+                <div className="list-header">
+                  <h3>{listName}</h3>
+                  <span className="word-count">
+                    {wordLists[listName].length} words
+                  </span>
+                </div>
+                <div className="list-preview">
+                  {wordLists[listName].slice(0, 5).join(", ")}
+                  {wordLists[listName].length > 5 && "..."}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="menu-buttons">
+            <button className="btn btn-secondary" onClick={backToMenu}>
+              Back to Menu
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (gameMode === "wordlist") {
     return (
       <div className="app">
         <div className="container">
           <h1 className="title">📝 Word List</h1>
-          <div className="word-grid">
-            {wordList.map((word, index) => (
-              <div key={index} className="word-card">
-                {word}
+          <p className="subtitle">
+            {selectedWordListName} - {wordList.length} words
+          </p>
+
+          <div className="word-list-view">
+            <div className="word-list-header">
+              <h3>All Words</h3>
+              <div className="word-list-stats">
+                <span className="stat-item">Total: {wordList.length}</span>
+                <span className="stat-item">
+                  Average Length:{" "}
+                  {Math.round(
+                    wordList.reduce((sum, word) => sum + word.length, 0) /
+                      wordList.length
+                  )}
+                </span>
               </div>
-            ))}
+            </div>
+
+            <div className="word-list-container">
+              {wordList.map((word, index) => (
+                <div key={index} className="word-list-item">
+                  <span className="word-number">{index + 1}.</span>
+                  <span className="word-text">{word}</span>
+                  <span className="word-length">({word.length})</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <button className="btn btn-primary" onClick={backToMenu}>
-            Back to Menu
-          </button>
+
+          <div className="menu-buttons">
+            <button className="btn btn-secondary" onClick={backToMenu}>
+              Back to Menu
+            </button>
+          </div>
         </div>
       </div>
     );
