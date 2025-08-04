@@ -36,7 +36,6 @@ function App() {
   const [editingIndex, setEditingIndex] = useState(-1);
   const [availableVoices, setAvailableVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState(null);
-  const [showVoiceSettings, setShowVoiceSettings] = useState(false);
 
   // Load available voices when component mounts
   useEffect(() => {
@@ -139,6 +138,33 @@ function App() {
     }
   };
 
+  const previewVoice = (voice) => {
+    if ("speechSynthesis" in window && voice) {
+      // Cancel any ongoing speech
+      speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(
+        "Hello, this is a preview"
+      );
+      utterance.voice = voice;
+      utterance.rate = 0.8;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+
+      speechSynthesis.speak(utterance);
+    }
+  };
+
+  const handleVoiceChange = (e) => {
+    const voice = availableVoices.find((v) => v.name === e.target.value);
+    setSelectedVoice(voice);
+
+    // Play preview when voice is selected
+    if (voice) {
+      previewVoice(voice);
+    }
+  };
+
   const getVoiceDisplayName = (voice) => {
     if (!voice) return "No voice available";
 
@@ -207,6 +233,26 @@ function App() {
           <p className="subtitle">
             Test your spelling skills with challenging words!
           </p>
+
+          <div className="voice-settings-menu">
+            <h3>🎤 Voice Settings</h3>
+            <div className="voice-select-container">
+              <select
+                value={selectedVoice ? selectedVoice.name : ""}
+                onChange={handleVoiceChange}
+                className="voice-select-menu"
+              >
+                {availableVoices.map((voice, index) => (
+                  <option key={index} value={voice.name}>
+                    {getVoiceDisplayName(voice)}
+                  </option>
+                ))}
+              </select>
+              <small className="voice-preview-hint">
+                Select a voice to hear a preview
+              </small>
+            </div>
+          </div>
 
           <div className="menu-buttons">
             <button className="btn btn-primary" onClick={startQuiz}>
@@ -394,40 +440,7 @@ function App() {
               <button className="btn btn-audio" onClick={speakWord}>
                 🔊 Play Word
               </button>
-              <button
-                className="btn btn-small btn-secondary"
-                onClick={() => setShowVoiceSettings(!showVoiceSettings)}
-              >
-                ⚙️ Voice Settings
-              </button>
             </div>
-
-            {showVoiceSettings && (
-              <div className="voice-settings">
-                <h4>Select Voice:</h4>
-                <select
-                  value={selectedVoice ? selectedVoice.name : ""}
-                  onChange={(e) => {
-                    const voice = availableVoices.find(
-                      (v) => v.name === e.target.value
-                    );
-                    setSelectedVoice(voice);
-                  }}
-                  className="voice-select"
-                >
-                  {availableVoices.map((voice, index) => (
-                    <option key={index} value={voice.name}>
-                      {getVoiceDisplayName(voice)}
-                    </option>
-                  ))}
-                </select>
-                {selectedVoice && (
-                  <div className="current-voice">
-                    <small>Current: {getVoiceDisplayName(selectedVoice)}</small>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
           <div className="input-section">
