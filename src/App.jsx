@@ -1,86 +1,116 @@
 import { useState, useEffect } from "react";
+import { defaultWordList } from "./wordList";
 import "./App.css";
 
 function App() {
+  const [gameMode, setGameMode] = useState("menu"); // 'menu', 'quiz', 'results', 'summary', 'wordlist', 'edit'
+  const [wordList, setWordList] = useState(defaultWordList);
   const [currentWord, setCurrentWord] = useState("");
   const [userInput, setUserInput] = useState("");
-  const [gameMode, setGameMode] = useState("menu"); // 'menu', 'quiz', 'results', 'summary', 'wordlist', 'edit'
-  const [wordList, setWordList] = useState([
-    "beautiful",
-    "difficult",
-    "knowledge",
-    "necessary",
-    "separate",
-    "accommodate",
-    "embarrass",
-    "occurrence",
-    "recommend",
-    "successful",
-    "appreciate",
-    "experience",
-    "independent",
-    "opportunity",
-    "responsible",
-    "communication",
-    "environment",
-    "immediately",
-    "occasionally",
-    "particularly",
-  ]);
   const [editingWord, setEditingWord] = useState("");
   const [newWord, setNewWord] = useState("");
   const [editingIndex, setEditingIndex] = useState(-1);
-  const [availableVoices, setAvailableVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState(null);
+  const [availableVoices, setAvailableVoices] = useState([]);
   const [quizWords, setQuizWords] = useState([]);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState([]);
+  const [sttEnabled, setSttEnabled] = useState(true);
+  const [isListening, setIsListening] = useState(false);
+  const [recognition, setRecognition] = useState(null);
+  const [speechTranscripts, setSpeechTranscripts] = useState([]);
+  const [currentTranscript, setCurrentTranscript] = useState("");
 
   // Load available voices when component mounts
   useEffect(() => {
     const loadVoices = () => {
-      if ("speechSynthesis" in window) {
-        const voices = speechSynthesis.getVoices();
-        setAvailableVoices(voices);
+      const voices = speechSynthesis.getVoices();
+      setAvailableVoices(voices);
 
-        // Try to find a suitable voice for Singaporeans
-        const preferredVoices = voices.filter(
-          (voice) =>
-            voice.lang.includes("en") &&
-            (voice.lang.includes("SG") ||
-              voice.lang.includes("GB") ||
-              voice.lang.includes("AU"))
-        );
+      // Try to find a Singaporean, British, or Australian English voice
+      const preferredVoice = voices.find(
+        (voice) =>
+          voice.lang === "en-SG" ||
+          voice.lang === "en-GB" ||
+          voice.lang === "en-AU"
+      );
 
-        if (preferredVoices.length > 0) {
-          setSelectedVoice(preferredVoices[0]);
-        } else if (voices.length > 0) {
-          setSelectedVoice(voices[0]);
-        }
+      if (preferredVoice) {
+        setSelectedVoice(preferredVoice);
+      } else if (voices.length > 0) {
+        setSelectedVoice(voices[0]);
       }
     };
 
-    // Load voices immediately if available
-    loadVoices();
-
-    // Also listen for voices to be loaded (some browsers load them asynchronously)
     if ("speechSynthesis" in window) {
-      speechSynthesis.addEventListener("voiceschanged", loadVoices);
+      loadVoices();
+      speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    // Initialize Speech Recognition
+    if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.lang = "en-US";
+
+      recognitionInstance.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognitionInstance.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        // Remove spaces and convert to lowercase for comparison
+        const cleanTranscript = transcript.replace(/\s+/g, "").toLowerCase();
+        const currentWordLower = currentWord.toLowerCase();
+
+        // Check if user is just repeating the word
+        if (cleanTranscript === currentWordLower) {
+          // Don't set the input if they're just repeating the word
+          setIsListening(false);
+          return;
+        }
+
+        // Remove spaces and filter to letters only
+        const lettersOnly = transcript
+          .replace(/[^a-zA-Z]/g, "")
+          .replace(/\s+/g, "");
+        setUserInput(lettersOnly);
+
+        // Save the original transcript for later
+        setCurrentTranscript(transcript);
+
+        setIsListening(false);
+      };
+
+      recognitionInstance.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        setIsListening(false);
+      };
+
+      recognitionInstance.onend = () => {
+        setIsListening(false);
+      };
+
+      setRecognition(recognitionInstance);
     }
 
     return () => {
       if ("speechSynthesis" in window) {
-        speechSynthesis.removeEventListener("voiceschanged", loadVoices);
+        speechSynthesis.onvoiceschanged = null;
       }
     };
   }, []);
 
-  // Auto-play word when current word changes
+  // Auto-play word when it changes
   useEffect(() => {
     if (currentWord && gameMode === "quiz") {
       // Small delay to ensure the word is set
       const timer = setTimeout(() => {
-        speakWord();
+        speakWord(currentWord);
       }, 500);
       return () => clearTimeout(timer);
     }
@@ -92,7 +122,9 @@ function App() {
     setQuizWords(shuffledWords);
     setCurrentWordIndex(0);
     setUserInput("");
-    setUserAnswers([]);
+    setUserAnswers([]); // Reset answers for new quiz
+    setSpeechTranscripts([]); // Reset transcripts for new quiz
+    setCurrentTranscript(""); // Reset current transcript
     setGameMode("quiz");
     setCurrentWord(shuffledWords[0]);
   };
@@ -103,6 +135,14 @@ function App() {
       const newAnswers = [...userAnswers];
       newAnswers[currentWordIndex] = userInput.trim();
       setUserAnswers(newAnswers);
+
+      // Save current transcript if it exists
+      if (currentTranscript) {
+        const newTranscripts = [...speechTranscripts];
+        newTranscripts[currentWordIndex] = currentTranscript;
+        setSpeechTranscripts(newTranscripts);
+        setCurrentTranscript(""); // Clear current transcript
+      }
     }
 
     const nextIndex = currentWordIndex + 1;
@@ -111,17 +151,59 @@ function App() {
       setCurrentWord(quizWords[nextIndex]);
       setUserInput("");
     } else {
-      // Quiz completed - save final answer
+      // Quiz completed - save final answer and go to summary
       const finalAnswers = [...userAnswers];
       finalAnswers[currentWordIndex] = userInput.trim();
       setUserAnswers(finalAnswers);
+
+      // Save final transcript if it exists
+      if (currentTranscript) {
+        const finalTranscripts = [...speechTranscripts];
+        finalTranscripts[currentWordIndex] = currentTranscript;
+        setSpeechTranscripts(finalTranscripts);
+        setCurrentTranscript(""); // Clear current transcript
+      }
+
       setGameMode("summary");
     }
   };
 
+  // Function to speak the current word
+  const speakWord = (word) => {
+    if ("speechSynthesis" in window && word) {
+      speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(word);
+      utterance.voice = selectedVoice;
+      utterance.rate = 0.8;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+      speechSynthesis.speak(utterance);
+    }
+  };
+
+  // Function to start speech recognition
+  const startListening = () => {
+    if (recognition && sttEnabled) {
+      recognition.start();
+    }
+  };
+
+  // Function to play back speech transcript
+  const playSpeechTranscript = (transcript) => {
+    if ("speechSynthesis" in window && transcript) {
+      speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(transcript);
+      utterance.voice = selectedVoice;
+      utterance.rate = 0.8;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+      speechSynthesis.speak(utterance);
+    }
+  };
+
+  // Handle input change
   const handleInputChange = (e) => {
     const value = e.target.value;
-    // Only allow letters (a-z, A-Z) and spaces
     const lettersOnly = value.replace(/[^a-zA-Z\s]/g, "");
     setUserInput(lettersOnly);
   };
@@ -134,21 +216,6 @@ function App() {
 
   const backToMenu = () => {
     setGameMode("menu");
-  };
-
-  const speakWord = () => {
-    if ("speechSynthesis" in window && selectedVoice) {
-      // Cancel any ongoing speech
-      speechSynthesis.cancel();
-
-      const utterance = new SpeechSynthesisUtterance(currentWord);
-      utterance.voice = selectedVoice;
-      utterance.rate = 0.8; // Slightly slower for clarity
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
-
-      speechSynthesis.speak(utterance);
-    }
   };
 
   const previewVoice = (voice) => {
@@ -432,6 +499,7 @@ function App() {
             <div className="summary-grid">
               {quizWords.map((word, index) => {
                 const userAnswer = userAnswers[index] || "";
+                const speechTranscript = speechTranscripts[index];
                 const isCorrect = checkAnswer(userAnswer, word);
                 return (
                   <div
@@ -446,6 +514,15 @@ function App() {
                     <div className="summary-answer">
                       <strong>Your answer:</strong>{" "}
                       {userAnswer || "(no answer)"}
+                      {speechTranscript && (
+                        <button
+                          className="btn btn-play-transcript"
+                          onClick={() => playSpeechTranscript(speechTranscript)}
+                          title="Play what you said"
+                        >
+                          🔊
+                        </button>
+                      )}
                     </div>
                     <div className="summary-result">
                       {isCorrect ? "✅ Correct" : "❌ Incorrect"}
@@ -502,15 +579,38 @@ function App() {
 
             <div className="input-section">
               <div className="input-label">Type the word:</div>
-              <input
-                type="text"
-                className="spelling-input"
-                value={userInput}
-                onChange={handleInputChange}
-                onKeyPress={handleKeyPress}
-                placeholder="Enter the spelling..."
-                autoFocus
-              />
+              <div className="input-container">
+                <input
+                  type="text"
+                  className="spelling-input"
+                  value={userInput}
+                  onChange={handleInputChange}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Enter the spelling..."
+                  autoFocus
+                />
+                <button
+                  className={`btn btn-stt ${
+                    isListening ? "listening" : sttEnabled ? "active" : ""
+                  }`}
+                  onClick={() => {
+                    if (sttEnabled) {
+                      startListening();
+                    } else {
+                      setSttEnabled(true);
+                    }
+                  }}
+                  title={
+                    isListening
+                      ? "Listening..."
+                      : sttEnabled
+                      ? "Click to speak your answer"
+                      : "Enable speech input"
+                  }
+                >
+                  {isListening ? "🎤" : sttEnabled ? "🎤" : "🔇"}
+                </button>
+              </div>
             </div>
 
             <div className="quiz-buttons">
