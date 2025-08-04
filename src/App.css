@@ -1349,10 +1349,28 @@ body {
   box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
 }
 
+.btn-stt:not(.active):not(.listening) {
+  background: linear-gradient(135deg, #9e9e9e, #757575);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-stt:not(.active):not(.listening):hover {
+  transform: none;
+  box-shadow: 0 4px 15px rgba(158, 158, 158, 0.3);
+}
+
 .btn-stt.listening {
   background: linear-gradient(135deg, #ff6b6b, #ee5a52);
   animation: pulse 1.5s infinite;
   box-shadow: 0 4px 15px rgba(255, 107, 107, 0.5);
+  border: 2px solid #ffffff;
+}
+
+.btn-stt.listening:hover {
+  background: linear-gradient(135deg, #ff5252, #d32f2f);
+  animation: none;
+  transform: scale(1.05);
 }
 
 @keyframes pulse {

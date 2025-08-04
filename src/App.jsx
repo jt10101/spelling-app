@@ -21,6 +21,7 @@ function App() {
   const [sttEnabled, setSttEnabled] = useState(true);
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState(null);
+  const [micPermissionGranted, setMicPermissionGranted] = useState(false);
   const [speechTranscripts, setSpeechTranscripts] = useState([]);
   const [currentTranscript, setCurrentTranscript] = useState("");
 
@@ -55,13 +56,15 @@ function App() {
       );
       setAvailableVoices(filteredVoices);
 
-      // Try to find a Singaporean, British, or Australian English voice
-      const preferredVoice = filteredVoices.find(
-        (voice) =>
-          voice.lang === "en-SG" ||
-          voice.lang === "en-GB" ||
-          voice.lang === "en-AU"
-      );
+      // Try to find Arthur (GB) first, then other British voices
+      const preferredVoice =
+        filteredVoices.find((voice) => voice.name === "Arthur") ||
+        filteredVoices.find(
+          (voice) =>
+            voice.lang === "en-GB" ||
+            voice.lang === "en-SG" ||
+            voice.lang === "en-AU"
+        );
 
       if (preferredVoice) {
         setSelectedVoice(preferredVoice);
@@ -84,9 +87,11 @@ function App() {
       recognitionInstance.continuous = false;
       recognitionInstance.interimResults = false;
       recognitionInstance.lang = "en-US";
+      recognitionInstance.maxAlternatives = 1;
 
       recognitionInstance.onstart = () => {
         setIsListening(true);
+        setMicPermissionGranted(true);
       };
 
       recognitionInstance.onresult = (event) => {
@@ -117,6 +122,12 @@ function App() {
       recognitionInstance.onerror = (event) => {
         console.error("Speech recognition error:", event.error);
         setIsListening(false);
+
+        // Handle permission denied error
+        if (event.error === "not-allowed") {
+          setMicPermissionGranted(false);
+          setSttEnabled(false);
+        }
       };
 
       recognitionInstance.onend = () => {
@@ -211,8 +222,25 @@ function App() {
 
   // Function to start speech recognition
   const startListening = () => {
-    if (recognition && sttEnabled) {
-      recognition.start();
+    if (recognition && sttEnabled && !isListening) {
+      try {
+        recognition.start();
+      } catch (error) {
+        console.error("Error starting speech recognition:", error);
+        setIsListening(false);
+      }
+    }
+  };
+
+  // Function to stop speech recognition
+  const stopListening = () => {
+    if (recognition && isListening) {
+      try {
+        recognition.stop();
+      } catch (error) {
+        console.error("Error stopping speech recognition:", error);
+      }
+      setIsListening(false);
     }
   };
 
@@ -706,21 +734,25 @@ function App() {
                     isListening ? "listening" : sttEnabled ? "active" : ""
                   }`}
                   onClick={() => {
-                    if (sttEnabled) {
+                    if (isListening) {
+                      stopListening();
+                    } else if (sttEnabled) {
                       startListening();
                     } else {
+                      // Re-enable microphone if it was disabled
                       setSttEnabled(true);
+                      setMicPermissionGranted(true);
                     }
                   }}
                   title={
                     isListening
-                      ? "Listening..."
+                      ? "Click to stop recording"
                       : sttEnabled
-                      ? "Click to speak your answer"
+                      ? "Click to record your answer"
                       : "Enable speech input"
                   }
                 >
-                  {isListening ? "🎤" : sttEnabled ? "🎤" : "🔇"}
+                  {isListening ? "⏹️" : sttEnabled ? "🎤" : "🔇"}
                 </button>
               </div>
             </div>
