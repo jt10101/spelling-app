@@ -28,10 +28,35 @@ function App() {
   useEffect(() => {
     const loadVoices = () => {
       const voices = speechSynthesis.getVoices();
-      setAvailableVoices(voices);
+      // Filter to only English and Chinese voices, excluding problematic voices
+      const filteredVoices = voices.filter(
+        (voice) =>
+          (voice.lang.startsWith("en") || voice.lang.startsWith("zh")) && //   "Cellos", //   "Bubbles", //   "Boing", //   "Bad News", // ![
+          //   "Bells",
+          //   "Bahh",
+          //   "Albert",
+          //   "Eddy (English (United Kingdom))",
+          //   "Eddy (English (United States))",
+          //   "Eddy (Chinese (China mainland))",
+          //   "Eddy (Chinese (Taiwan))",
+          //   "Flo (English (United Kingdom))",
+          //   "Flo (English (United States))",
+          //   "Flo (Chinese (China mainland))",
+          //   "Flo (Chinese (Taiwan))",
+          //   "Fred",
+          //   "Good News",
+          // ].includes(voice.name)
+          [
+            "Arthur",
+            "Catherine",
+            "Gordon",
+            "Daniel (English (United Kingdom))",
+          ].includes(voice.name)
+      );
+      setAvailableVoices(filteredVoices);
 
       // Try to find a Singaporean, British, or Australian English voice
-      const preferredVoice = voices.find(
+      const preferredVoice = filteredVoices.find(
         (voice) =>
           voice.lang === "en-SG" ||
           voice.lang === "en-GB" ||
@@ -40,8 +65,8 @@ function App() {
 
       if (preferredVoice) {
         setSelectedVoice(preferredVoice);
-      } else if (voices.length > 0) {
-        setSelectedVoice(voices[0]);
+      } else if (filteredVoices.length > 0) {
+        setSelectedVoice(filteredVoices[0]);
       }
     };
 
@@ -77,11 +102,11 @@ function App() {
           return;
         }
 
-        // Remove spaces and filter to letters only
-        const lettersOnly = transcript
-          .replace(/[^a-zA-Z]/g, "")
+        // Remove spaces and filter to letters, commas, and periods only
+        const allowedChars = transcript
+          .replace(/[^a-zA-Z,.]/g, "")
           .replace(/\s+/g, "");
-        setUserInput(lettersOnly);
+        setUserInput(allowedChars);
 
         // Save the original transcript for later
         setCurrentTranscript(transcript);
@@ -207,8 +232,9 @@ function App() {
   // Handle input change
   const handleInputChange = (e) => {
     const value = e.target.value;
-    const lettersOnly = value.replace(/[^a-zA-Z\s]/g, "");
-    setUserInput(lettersOnly);
+    // Allow letters, spaces, commas, and periods
+    const allowedChars = value.replace(/[^a-zA-Z\s,.]/g, "");
+    setUserInput(allowedChars);
   };
 
   const handleKeyPress = (e) => {
