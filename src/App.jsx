@@ -21,7 +21,6 @@ function App() {
   const [sttEnabled, setSttEnabled] = useState(true);
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState(null);
-  const [micPermissionGranted, setMicPermissionGranted] = useState(false);
   const [speechTranscripts, setSpeechTranscripts] = useState([]);
   const [currentTranscript, setCurrentTranscript] = useState("");
 
@@ -91,7 +90,6 @@ function App() {
 
       recognitionInstance.onstart = () => {
         setIsListening(true);
-        setMicPermissionGranted(true);
       };
 
       recognitionInstance.onresult = (event) => {
@@ -125,7 +123,6 @@ function App() {
 
         // Handle permission denied error
         if (event.error === "not-allowed") {
-          setMicPermissionGranted(false);
           setSttEnabled(false);
         }
       };
@@ -538,14 +535,18 @@ function App() {
           <div className="add-word-section">
             <h3>Add New Word</h3>
             <div className="add-word-input">
-              <input
-                type="text"
-                value={newWord}
-                onChange={(e) => setNewWord(e.target.value)}
-                onKeyPress={handleAddKeyPress}
-                placeholder="Enter a new word..."
-                className="spelling-input"
-              />
+                              <input
+                  type="text"
+                  value={newWord}
+                  onChange={(e) => setNewWord(e.target.value)}
+                  onKeyPress={handleAddKeyPress}
+                  placeholder="Enter a new word..."
+                  className="spelling-input"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
+                />
               <button className="btn btn-primary" onClick={addWord}>
                 Add Word
               </button>
@@ -566,6 +567,10 @@ function App() {
                         onKeyPress={handleEditKeyPress}
                         className="edit-input"
                         autoFocus
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
                       />
                       <div className="edit-buttons">
                         <button
@@ -728,6 +733,10 @@ function App() {
                   onKeyPress={handleKeyPress}
                   placeholder="Enter the spelling..."
                   autoFocus
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
                 />
                 <button
                   className={`btn btn-stt ${
@@ -741,7 +750,6 @@ function App() {
                     } else {
                       // Re-enable microphone if it was disabled
                       setSttEnabled(true);
-                      setMicPermissionGranted(true);
                     }
                   }}
                   title={

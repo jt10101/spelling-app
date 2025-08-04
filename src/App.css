@@ -467,6 +467,25 @@ body {
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+/* Prevent mobile autocomplete/autofill styling */
+.spelling-input:-webkit-autofill,
+.spelling-input:-webkit-autofill:hover,
+.spelling-input:-webkit-autofill:focus,
+.spelling-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: #333 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.edit-input:-webkit-autofill,
+.edit-input:-webkit-autofill:hover,
+.edit-input:-webkit-autofill:focus,
+.edit-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: #333 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 .spelling-input::placeholder {
   color: #a0aec0;
   font-weight: 400;
