@@ -352,85 +352,65 @@ body {
   gap: 15px;
 }
 
-.word-display {
-  background: linear-gradient(135deg, #f093fb, #f5576c);
-  padding: 15px;
-  border-radius: 10px;
-  color: white;
-  margin-bottom: 12px;
-}
-
-.word-display h2 {
-  margin-bottom: 8px;
-  font-size: 1rem;
-  line-height: 1.2;
-}
-
-.voice-controls {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: 8px;
-}
-
-.voice-settings {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 12px;
-  border-radius: 8px;
-  margin-top: 8px;
-  text-align: left;
-  animation: slideIn 0.3s ease-out;
-}
-
-.voice-settings h4 {
-  margin-bottom: 6px;
-  font-size: 0.9rem;
-}
-
-.voice-select {
+/* Quiz container */
+.quiz-container {
   width: 100%;
-  padding: 6px 10px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.9);
-  color: #333;
-  font-size: 0.85rem;
-  margin-bottom: 6px;
-  /* Better mobile select styling */
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 6px center;
-  background-size: 12px;
-  padding-right: 25px;
 }
 
-.voice-select:focus {
-  outline: none;
-  border-color: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+/* Word display section */
+.word-display {
+  background: linear-gradient(135deg, #ff6b9d, #c44569);
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 15px rgba(255, 107, 157, 0.3);
 }
 
-.current-voice {
-  color: rgba(255, 255, 255, 0.8);
-  font-style: italic;
-  font-size: 0.75rem;
+.word-display-text {
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+.btn-play {
+  background: linear-gradient(135deg, #74b9ff, #0984e3);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 15px rgba(116, 185, 255, 0.3);
+}
+
+.btn-play:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(116, 185, 255, 0.4);
+}
+
+.btn-play:active {
+  transform: translateY(0);
+}
+
+/* Input section */
 .input-section {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  text-align: left;
+  margin-bottom: 20px;
 }
 
-.input-section label {
+.input-label {
+  font-size: 1.1rem;
   font-weight: 600;
   color: #333;
-  font-size: 0.9rem;
+  margin-bottom: 10px;
+  text-align: left;
 }
 
 .spelling-input {
@@ -739,6 +719,28 @@ body {
     margin: 0;
   }
 
+  .word-display {
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+  }
+
+  .word-display-text {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+  }
+
+  .btn-play {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    border-radius: 10px;
+  }
+
+  .input-label {
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+
   .quiz-buttons {
     flex-direction: column;
   }
@@ -765,10 +767,6 @@ body {
   .voice-controls {
     flex-direction: column;
     align-items: center;
-  }
-
-  .word-display {
-    padding: 12px 10px;
   }
 
   .btn {
@@ -828,7 +826,25 @@ body {
   }
 
   .word-display {
-    padding: 10px 8px;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+  }
+
+  .word-display-text {
+    font-size: 1rem;
+    margin-bottom: 10px;
+  }
+
+  .btn-play {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
+
+  .input-label {
+    font-size: 0.95rem;
+    margin-bottom: 6px;
   }
 
   .word-grid {
@@ -918,6 +934,28 @@ body {
     margin-bottom: 2px;
   }
 
+  .word-display {
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+
+  .word-display-text {
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+  }
+
+  .btn-play {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    border-radius: 6px;
+  }
+
+  .input-label {
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+  }
+
   .word-grid {
     grid-template-columns: 1fr;
     max-height: 150px;
@@ -926,10 +964,6 @@ body {
   .btn {
     padding: 6px 10px;
     font-size: 0.75rem;
-  }
-
-  .word-display {
-    padding: 8px 6px;
   }
 
   .btn-back-menu {
@@ -977,6 +1011,21 @@ body {
   .word-display {
     padding: 10px;
     margin-bottom: 8px;
+  }
+
+  .word-display-text {
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+  }
+
+  .btn-play {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  .input-label {
+    font-size: 0.85rem;
+    margin-bottom: 4px;
   }
 
   .menu-buttons {

@@ -472,48 +472,54 @@ function App() {
   return (
     <div className="app">
       <div className="container">
-        <div className="header">
-          <h1 className="title">📝 Spelling Quiz</h1>
-          <div className="stats">
-            <span>
-              Word: {currentWordIndex + 1}/{quizWords.length}
-            </span>
-          </div>
-          <button className="btn-back-menu" onClick={backToMenu}>
-            ← Menu
-          </button>
-        </div>
+        {/* Quiz Mode */}
+        {gameMode === "quiz" && (
+          <div className="quiz-container">
+            <div className="header">
+              <div className="title">
+                <span className="icon">📚</span>
+                <div>
+                  <div>Spelling</div>
+                  <div>Quiz</div>
+                </div>
+              </div>
+              <button className="btn-back-menu" onClick={backToMenu}>
+                ← Menu
+              </button>
+            </div>
 
-        <div className="quiz-area">
-          <div className="word-display">
-            <h2>Listen to the word:</h2>
-            <div className="voice-controls">
-              <button className="btn btn-audio" onClick={speakWord}>
+            <div className="word-display">
+              <div className="word-display-text">
+                Word: {currentWordIndex + 1}/{quizWords.length}
+              </div>
+              <button
+                className="btn btn-play"
+                onClick={() => speakWord(currentWord)}
+              >
                 🔊 Play Word Again
               </button>
             </div>
-          </div>
 
-          <div className="input-section">
-            <label htmlFor="spelling-input">Type the word:</label>
-            <input
-              id="spelling-input"
-              type="text"
-              value={userInput}
-              onChange={handleInputChange}
-              onKeyPress={handleKeyPress}
-              placeholder="Enter the spelling..."
-              className="spelling-input"
-              autoFocus
-            />
-          </div>
+            <div className="input-section">
+              <div className="input-label">Type the word:</div>
+              <input
+                type="text"
+                className="spelling-input"
+                value={userInput}
+                onChange={handleInputChange}
+                onKeyPress={handleKeyPress}
+                placeholder="Enter the spelling..."
+                autoFocus
+              />
+            </div>
 
-          <div className="quiz-buttons">
-            <button className="btn btn-primary" onClick={getNewWord}>
-              Next Word
-            </button>
+            <div className="quiz-buttons">
+              <button className="btn btn-primary" onClick={getNewWord}>
+                Next Word
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
